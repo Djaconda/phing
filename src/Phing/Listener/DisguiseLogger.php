@@ -18,51 +18,54 @@
  * <http://phing.info>.
  */
 
-namespace Phing\Test\Task\System;
+namespace Phing\Listener;
 
-use Phing\Test\Support\BuildFileTest;
+use Phing\Phing;
 
 /**
- * Test ReplaceRegexpTask.
- *
- * @author Siad Ardroumli <siad.ardroumli@gmail.com>
- *
- * @internal
+ * @author  Siad Ardroumli <siad.ardroumli@gmail.com>
  */
-class ReplaceRegexpTaskTest extends BuildFileTest
+class DisguiseLogger extends DefaultLogger
 {
-    public function setUp(): void
+    public function messageLogged(BuildEvent $event)
     {
-        $this->configureProject(
-            PHING_TEST_BASE
-            . '/etc/tasks/system/ReplaceRegexpTaskTest.xml'
+        $this->maskUriPassword($event);
+        parent::messageLogged($event);
+    }
+
+    public function buildStarted(BuildEvent $event)
+    {
+    }
+
+    public function buildFinished(BuildEvent $event)
+    {
+    }
+
+    public function targetStarted(BuildEvent $event)
+    {
+    }
+
+    public function targetFinished(BuildEvent $event)
+    {
+    }
+
+    public function taskStarted(BuildEvent $event)
+    {
+    }
+
+    public function taskFinished(BuildEvent $event)
+    {
+    }
+
+    protected function maskUriPassword(BuildEvent $event): void
+    {
+        $event->setMessage(
+            preg_replace(
+                '!://(.*):(.*)@!',
+                '://$1:*****@',
+                $event->getMessage()
+            ),
+            $event->getPriority()
         );
-        $this->executeTarget('setup');
-    }
-
-    public function tearDown(): void
-    {
-        $this->executeTarget('clean');
-    }
-
-    public function testReplaceRegexp(): void
-    {
-        $this->executeTarget(__FUNCTION__);
-        $this->assertStringEqualsFile('test.properties', 'NewProperty=12345');
-    }
-
-    public function testFailOnError(): void
-    {
-        $this->expectBuildExceptionContaining(
-            __FUNCTION__,
-            'failonerror has to fail',
-            "Error reading file:"
-        );
-    }
-
-    public function testFlags(): void
-    {
-        $this->executeTarget(__FUNCTION__);
-        $this->assertStringEqualsFile('test.properties', 'NewProperty=12345');
     }
 }
